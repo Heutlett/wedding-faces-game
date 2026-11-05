@@ -1,0 +1,30 @@
+# ── Caras de los novios REALES: nunca se suben ──────────────────────────────
+# (cualquier foto cuyo nombre empiece con "real", sin importar mayúsculas)
+caras/**/[Rr][Ee][Aa][Ll]*
+# copias sueltas en la raíz del proyecto (p. ej. rostro_novia.png / rostro_novio.png)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+/*.heic
+
+# ── Salidas generadas (los PDF y muestras llevan las caras reales) ──────────
+output/
+.output/
+*.pdf
+manifest*.csv
+
+# ── Secretos ────────────────────────────────────────────────────────────────
+google.json
+
+# ── Temporales / entorno ────────────────────────────────────────────────────
+*.tmp
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.cache/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

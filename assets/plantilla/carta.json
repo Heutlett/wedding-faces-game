@@ -1,0 +1,15 @@
+{
+  "ancho_px": 2052,
+  "alto_px": 2788,
+  "novia": {
+    "cx": 689.5,
+    "cy": 969.5,
+    "r": 290.0
+  },
+  "novio": {
+    "cx": 1298.5,
+    "cy": 955.5,
+    "r": 286.0
+  },
+  "fuente": "final-design.jpeg, carta superior izquierda (x 37-549, y 15-711), escalada x4 con EDSR"
+}
