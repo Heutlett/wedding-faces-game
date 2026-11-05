@@ -1,6 +1,14 @@
-# ── Caras de los novios REALES: nunca se suben ──────────────────────────────
-# (cualquier foto cuyo nombre empiece con "real", sin importar mayúsculas)
-caras/**/[Rr][Ee][Aa][Ll]*
+# ── Caras: no se sube NINGUNA foto (ni reales ni fakes); cada usuario pone las suyas ──
+# solo se suben las carpetas vacías (caras/novias/.gitkeep y caras/novios/.gitkeep)
+caras/**
+!caras/novias/
+!caras/novios/
+!caras/novias/.gitkeep
+!caras/novios/.gitkeep
+
+# ── Estado de cada usuario: qué cara va en cada carta y sus ajustes (la herramienta lo crea al abrirse) ──
+proyecto.json
+proyecto.tmp
 # copias sueltas en la raíz del proyecto (p. ej. rostro_novia.png / rostro_novio.png)
 /*.png
 /*.jpg

@@ -26,9 +26,10 @@ git clone git@github.com:Heutlett/wedding-faces-game.git
 cd wedding-faces-game
 pip install -r requirements.txt
 
-# las fotos reales NO están en el repo: cópialas (el nombre debe empezar con "real")
+# el repo no trae fotos: pon las tuyas (la real debe empezar con "real")
 cp ~/Descargas/novia.png caras/novias/real_rostro_novia.png
 cp ~/Descargas/novio.png caras/novios/real_rostro_novio.png
+# los fakes se pueden copiar igual o agregar/buscar desde la herramienta
 
 python3 cartas.py
 ```
@@ -67,19 +68,24 @@ Reglas que aplica la herramienta (en la página **y** en el servidor):
 ```
 cartas.py                  la herramienta completa (servidor web + página + generador del PDF)
 requirements.txt           dependencias (Pillow)
-proyecto.json              estado: qué cara lleva cada carta, ajustes de cada foto, opciones
 assets/plantilla/
   carta.png                diseño de la carta (2052 × 2788 px, sin caras)
   carta.json               tamaño de la plantilla y posición/radio de los dos círculos (en px de carta.png)
   final-design.jpeg        diseño original (4 cartas en una hoja) del que sale carta.png
 caras/
-  novias/                  fotos de novias (fakes en el repo; la real se agrega a mano)
-  novios/                  fotos de novios (fakes en el repo; la real se agrega a mano)
+  novias/                  fotos de novias (vacía en el repo: cada usuario pone las suyas)
+  novios/                  fotos de novios (vacía en el repo: cada usuario pone las suyas)
 ```
+
+Al usar la herramienta se crean archivos locales que **no** se suben:
+
+- `proyecto.json`: qué cara lleva cada carta, el ajuste de cada foto y las opciones. Se crea al abrir la herramienta por primera vez.
+- `google.json`: la clave de la API de Google, solo si la configuras.
 
 No se suben al repo (ver `.gitignore`):
 
-- **las fotos reales:** cualquier archivo de `caras/` cuyo nombre empiece con `real`, sin importar mayúsculas, y las imágenes sueltas en la raíz;
+- **ninguna foto:** ni reales ni fakes. De `caras/` solo se suben las carpetas vacías; tampoco las imágenes sueltas en la raíz;
+- **`proyecto.json`:** la configuración de cartas y ajustes de cada usuario;
 - **los PDF y salidas** (`output/`, `.output/`, `*.pdf`, `manifest*.csv`), porque llevan las caras reales;
 - **`google.json`**, que guarda la clave de la API de Google.
 
@@ -95,7 +101,7 @@ La herramienta toma las fotos **solo** de `caras/novias/` y `caras/novios/`.
 - **Sin duplicados:** si una imagen idéntica (byte a byte) ya está en la carpeta, no se crea otra copia y se reutiliza la existente.
 - **Encuadre:** el ajuste (posición, zoom, rotación) se guarda **por foto**, en `proyecto.json`, y vale en todas las cartas donde esté esa foto. Las fotos sin ajustar usan un encuadre automático: en recortes con fondo transparente busca la cabeza completa; en fotos normales usa un cuadrado centrado.
 
-**En otra compu:** como las fotos reales no están en el repo, copia las tuyas a `caras/novias/` y `caras/novios/`. Si les pones el mismo nombre que tenían (`real_rostro_novia.png`, `real_rostro_novio.png`), conservan su ajuste guardado. Con otro nombre funcionan igual, pero con el encuadre automático.
+**En otra compu:** el repo no trae fotos ni `proyecto.json`, así que cada usuario arma lo suyo: copia sus fotos a `caras/novias/` y `caras/novios/` y elige los fakes en la herramienta. Para llevarte tu avance tal cual, copia también tu `proyecto.json`. Con las fotos con el mismo nombre, se conservan las cartas y los ajustes.
 
 Correcciones automáticas al abrir la herramienta (las avisa en la terminal):
 
@@ -125,8 +131,10 @@ Correcciones automáticas al abrir la herramienta (las avisa en la terminal):
 
 **Elegir los fakes**
 1. Toca una carta en la tira de abajo, o cambia de carta con `‹ ›` o `PageUp` / `PageDown`.
-2. Toca el círculo fake de la carta, o elige *Novia* / *Novio* en el panel derecho.
-3. Toca una foto **libre** de la biblioteca: queda puesta en esa carta. *Quitar* la deja libre otra vez.
+   - Al cambiar de carta se selecciona solo el lado que se puede elegir: en una carta *NOVIA REAL* se activan el lado y la pestaña **Novios**; en una *NOVIO REAL*, el lado y la pestaña **Novias**.
+   - La URL guarda la carta abierta (`…/#carta=12`), así que puedes mandarle a alguien el enlace directo a una carta.
+2. Toca una foto **libre** de la biblioteca: queda puesta en esa carta. *Quitar* la deja libre otra vez.
+   - Puedes cambiar a la otra pestaña para ver esas fotos, pero en esa carta no se pueden poner, porque ese lado es la foto real. Se ven atenuadas y, si tocas una, solo aparece un aviso.
 
 **Acomodar una cara**, en el círculo de la carta:
 - **arrastrar** = mover;
@@ -227,7 +235,7 @@ Para compartirla:
 
 ### `proyecto.json`
 
-Lo escribe la herramienta; normalmente no hace falta editarlo a mano.
+Lo escribe la herramienta y es local de cada usuario: no se sube al repo. Normalmente no hace falta editarlo a mano.
 
 ```jsonc
 {

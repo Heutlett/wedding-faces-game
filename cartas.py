@@ -893,8 +893,14 @@ HTML = r"""<!doctype html>
   .foto .usos { position:absolute; right:-4px; top:-4px; min-width:19px; height:19px; border-radius:10px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
                 background:#fff; border:1px solid var(--borde); color:var(--suave); padding:0 4px }
   .foto.usada { opacity:.45; filter:grayscale(.6) }
+  .foto.noelegible { opacity:.55; cursor:not-allowed }
+  .foto.noelegible:hover { transform:none }
   .foto.usada:hover { opacity:.8 }
-  .foto .tag.en { background:#8f8473; white-space:nowrap }
+  .foto .tag { white-space:nowrap; line-height:1.35 }
+  .foto .tag.en { background:#8f8473 }
+  .foto .candado { position:absolute; right:-3px; top:-3px; width:22px; height:22px; border-radius:50%; background:#fff;
+                   border:1px solid var(--borde); display:flex; align-items:center; justify-content:center; font-size:11px;
+                   box-shadow:0 1px 3px #0002 }
   .foto .pend { position:absolute; left:2px; top:2px; width:9px; height:9px; border-radius:50%; background:#e38a3a; box-shadow:0 0 0 2px #fff }
   .vacio { color:#9b8b72; font-size:13px; grid-column:1/-1; padding:4px 0 }
   button, .btn { font:600 12.5px system-ui,sans-serif; border:1px solid var(--oro); background:linear-gradient(#fffaf0,#f5e7c4); color:#6b4f16;
@@ -1071,7 +1077,11 @@ async function api(ruta, datos) {
   const j = await r.json(); if (j.error) { alert(j.error); throw j.error; } return j;
 }
 function aplicar(est) { E = est; cur = Math.min(cur, E.cartas.length - 1); pintarTodo(); }
-async function refrescar() { aplicar(await (await fetch('/api/estado')).json()); }
+let primera = true;
+async function refrescar() {
+  aplicar(await (await fetch('/api/estado')).json());
+  if (primera) { primera = false; const m = location.hash.match(/carta=(\d+)/); irA(m ? +m[1] - 1 : cur); }
+}
 
 // ---------------- dibujo (misma geometría que el PDF)
 function pintarCarta(c, carta, W, H, opts = {}) {
@@ -1157,23 +1167,31 @@ function pintarTira() {
 function pintarLista() {
   const rol = ROL[lado], L = $('#lista'); L.innerHTML = '';
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.rol === rol));
+  const otro = ladoEditable(cur) !== lado ? ladoEditable(cur) : null;
   $('#ayuda-lista').textContent = E.cartas[cur].fijo[lado]
-    ? `En la carta ${cur + 1} el lado de ${lado} es la foto real: está bloqueada.`
+    ? `En la carta ${cur + 1} ${lado === 'novia' ? 'la novia' : 'el novio'} es la foto real (bloqueada): estas fotos solo se pueden ver.`
+      + (otro ? ` Para elegir, ve a la pestaña ${ROL[otro][0].toUpperCase() + ROL[otro].slice(1)}.` : '')
     : `Toca una foto libre para ponerla en la carta ${cur + 1} (${lado} fake). Cada fake va en una sola carta: las usadas tienen 🔒. `
       + `Libres: ${E.fotos[rol].filter(f => !f.real && f.en === null).length}.`;
   if (!E.fotos[rol].length) L.innerHTML = `<div class="vacio">Todavía no hay fotos de ${rol}.</div>`;
   const actual = E.cartas[cur][lado];
   for (const f of E.fotos[rol]) {
     const usadaOtra = !f.real && f.en !== null && f.en !== cur;
-    const d = document.createElement('div'); d.className = 'foto' + (f.nombre === actual ? ' sel' : '') + (usadaOtra ? ' usada' : '');
+    const ladoBloq = E.cartas[cur].fijo[lado];
+    const d = document.createElement('div');
+    const realEnFake = f.real && !ladoBloq;          // la real nunca va en un lugar fake
+    d.className = 'foto' + (f.nombre === actual ? ' sel' : '') + (usadaOtra ? ' usada' : '')
+      + ((ladoBloq && !usadaOtra) || realEnFake ? ' noelegible' : '');
     d.style.backgroundImage = `url("${f.url}")`;
-    d.title = f.nombre + (usadaOtra ? ` · ya está en la carta ${f.en + 1} (toca para ir)` : '');
-    d.innerHTML = (f.real ? '<span class="tag">REAL</span>' : usadaOtra ? `<span class="tag en">🔒 carta ${f.en + 1}</span>` : f.en === cur ? '<span class="tag">aquí</span>' : '')
+    d.title = f.nombre + (usadaOtra ? ` · ya está en la carta ${f.en + 1} (toca para ir)`
+      : realEnFake ? ' · foto real: solo va en sus cartas fijas, no en un lugar fake' : '');
+    d.innerHTML = (realEnFake ? '<span class="candado" title="no se puede elegir aquí">🔒</span>' : '')
+      + (f.real ? '<span class="tag">REAL</span>' : usadaOtra ? `<span class="tag en">🔒 carta ${f.en + 1}</span>` : f.en === cur ? '<span class="tag">aquí</span>' : '')
       + (f.guardado ? '' : '<span class="pend" title="sin ajustar"></span>');
     d.onclick = async () => {
       if (usadaOtra) { irA(f.en); $('#msg').textContent = `${f.nombre} ya está en la carta ${f.en + 1}: los fakes no se repiten`; return; }
-      if (E.cartas[cur].fijo[lado]) { alert(`En la carta ${cur + 1} este lugar es de la foto real. Los fakes van en el otro lado.`); return; }
-      if (f.real) { alert('La foto real ya está en sus cartas. Aquí va un fake.'); return; }
+      if (ladoBloq) { aviso(`En la carta ${cur + 1} ${lado === 'novia' ? 'la novia' : 'el novio'} es la foto real: aquí solo se elige ${lado === 'novia' ? 'el novio' : 'la novia'}.`); return; }
+      if (f.real) { aviso(`La foto real solo va en sus cartas fijas: en la carta ${cur + 1} este lugar es para ${lado === 'novia' ? 'una novia' : 'un novio'} fake.`); return; }
       aplicar((await api('/api/carta', { i: cur, lado, nombre: f.nombre })).estado);
     };
     L.appendChild(d);
@@ -1211,7 +1229,16 @@ function pintarSlot() {
   $('#zoom').value = f.ajuste.zoom; $('#rot').value = f.ajuste.rot;
   $('#vzoom').textContent = f.ajuste.zoom.toFixed(2) + '×'; $('#vrot').textContent = (+f.ajuste.rot).toFixed(1) + '°';
 }
-function irA(i) { desbloq.novia = desbloq.novio = false; cur = Math.max(0, Math.min(E.cartas.length - 1, i)); pintarTira(); pintarLista(); pintarSlot(); dibujar(); }
+function ladoEditable(i) {            // carta con la novia real → se edita el novio (y al revés)
+  const f = E.cartas[i].fijo;
+  return f.novia && !f.novio ? 'novio' : f.novio && !f.novia ? 'novia' : lado;
+}
+function irA(i) {
+  desbloq.novia = desbloq.novio = false; cur = Math.max(0, Math.min(E.cartas.length - 1, i));
+  lado = ladoEditable(cur);
+  history.replaceState(null, '', '#carta=' + (cur + 1));
+  pintarTira(); pintarLista(); pintarSlot(); dibujar();
+}
 function elegirLado(l) { lado = l; pintarLista(); pintarSlot(); dibujar(); }
 
 // ---------------- ajuste (se guarda solo)
@@ -1231,7 +1258,8 @@ function cambiar(fn) {
   }, 300);
 }
 async function pendiente() { if (tGuardar) { clearTimeout(tGuardar); const f = fotoSlot(); tGuardar = null; if (f) await api('/api/ajuste', { rol: ROL[lado], nombre: f.nombre, ajuste: f.ajuste, desbloqueado: f.real }); } }
-let tAviso = null;
+let tAviso = null, tMsg = null;
+function aviso(txt) { $('#msg').textContent = txt; clearTimeout(tMsg); tMsg = setTimeout(() => { if ($('#msg').textContent === txt) $('#msg').textContent = ''; }, 4000); }
 function avisoBloqueo() {
   $('#estado-guardado').textContent = '🔒 la foto real está bloqueada'; $('#estado-guardado').style.color = '#9c3b3b';
   clearTimeout(tAviso); tAviso = setTimeout(() => $('#estado-guardado').textContent = '', 1800);
